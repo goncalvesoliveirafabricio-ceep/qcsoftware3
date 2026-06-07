@@ -185,3 +185,7 @@ def resolver_ocorrencia(id_maquina: int, dados: ResolucaoInput, db: Session = De
 # INTERFACE ESTÁTICA
 # ---------------------------------------------------------------------------
 app.mount("/", StaticFiles(directory=".", html=True), name="raiz")
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
