@@ -33,8 +33,8 @@ async function atualizarPainelIndustrial() {
             container.className = 'maquina-container';
             
             const colunas = 10;
-            const espacamentoX = 110; 
-            const espacamentoY = 105; 
+            const espacamentoX = 112; // Ajustado sutilmente para acomodar a largura de 110px do CSS
+            const espacamentoY = 135; // Aumentado de 105 para 135 para afastar as fileiras conforme a imagem
             
             const posX = (index % colunas) * espacamentoX + 25;
             const posY = Math.floor(index / colunas) * espacamentoY + 30;
