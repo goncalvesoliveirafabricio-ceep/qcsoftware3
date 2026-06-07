@@ -1,3 +1,4 @@
+import os
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -5,7 +6,7 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
-app = FastAPI(title="API MapaMaquinas - Q.C Software (Estados Customizados)")
+app = FastAPI(title="Q.C Software - API MapaMaquinas")
 
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÃO DE CONEXÃO E INFRAESTRUTURA NEON POSTGRESQL
@@ -21,18 +22,16 @@ Base = declarative_base()
 # MODELOS DE TABELAS (SQLALCHEMY ORM)
 # ---------------------------------------------------------------------------
 class MapaMaquinas(Base):
-    # Alterado para o novo nome solicitado
     __tablename__ = "maquinas_mapa"
     
     id_maquinas = Column(Integer, primary_key=True, index=True)
     nome = Column(String(100), nullable=False)
     x = Column(Integer, default=0)
     y = Column(Integer, default=0)
-    status = Column(String(30), default="Normal")
+    status = Column(String(30), default="Normal")  # 'Normal', 'Parado', 'Manutenção'
     ativo = Column(Boolean, default=True)
 
 class HistoricoOcorrencias(Base):
-    # Ajustado conforme a sua solicitação anterior
     __tablename__ = "maquinas_historico_ocorrencias"
     
     id = Column(Integer, primary_key=True, autoincrement=True)
@@ -64,7 +63,7 @@ def inicializar_banco():
             ]
             db.add_all(maquinas_iniciais)
             db.commit()
-            print("✅ Tabela mapamaquinas configurada com sucesso!")
+            print("✅ Tabela maquinas_mapa configurada com sucesso!")
     except Exception as e:
         print(f"Erro ao inicializar dados: {e}")
         db.rollback()
@@ -114,7 +113,6 @@ def obter_ultima_ocorrencia(id_maquina: int, db: Session = Depends(get_db)):
         HistoricoOcorrencias.id_maquinas == id_maquina
     ).order_by(HistoricoOcorrencias.id.desc()).first()
     
-    # Se não houver registro ou se já contiver a flag de conclusão, a máquina está disponível para novos eventos
     if not ocorrencia or "[RESOLVIDO" in ocorrencia.problema:
         return {"tem_ocorrencia": False}
         
@@ -128,7 +126,7 @@ def obter_ultima_ocorrencia(id_maquina: int, db: Session = Depends(get_db)):
 
 @app.post("/api/mapamaquinas/{id_maquina}/ocorrencia")
 def registrar_ocorrencia(id_maquina: int, dados: OcorrenciaInput, db: Session = Depends(get_db)):
-    """Reporta um problema e altera o status da máquina no mapa para 'Parada' (Vermelho)"""
+    """Reporta um problema e altera o status da máquina no mapa para 'Parado' (Vermelho)"""
     maquina = db.query(MapaMaquinas).filter(MapaMaquinas.id_maquinas == id_maquina).first()
     if not maquina:
         raise HTTPException(status_code=404, detail="Ativo não localizado no Q.C Software")
@@ -141,8 +139,8 @@ def registrar_ocorrencia(id_maquina: int, dados: OcorrenciaInput, db: Session = 
     )
     db.add(nova_ocorrencia)
     
-    # Atualiza o status do monitoramento para Parada
-    maquina.status = "Parada"
+    # Atualizado de 'Parada' para 'Parado' para casar perfeitamente com o CSS e o app.js
+    maquina.status = "Parado"
     
     db.commit()
     return {"status": "sucesso", "novo_status": maquina.status}
@@ -150,7 +148,7 @@ def registrar_ocorrencia(id_maquina: int, dados: OcorrenciaInput, db: Session = 
 
 @app.post("/api/mapamaquinas/{id_maquina}/manutencao")
 def colocar_em_manutencao(id_maquina: int, db: Session = Depends(get_db)):
-    """Rota intermediária opcional: Altera o status do ativo para 'Manutenção' (Amarelo)"""
+    """Altera o status do ativo para 'Manutenção' (Amarelo)"""
     maquina = db.query(MapaMaquinas).filter(MapaMaquinas.id_maquinas == id_maquina).first()
     if not maquina:
         raise HTTPException(status_code=404, detail="Ativo não localizado")
@@ -175,7 +173,6 @@ def resolver_ocorrencia(id_maquina: int, dados: ResolucaoInput, db: Session = De
         texto_solucao = f"\n\n[RESOLVIDO em {dados.data_hora} por {dados.colaborador}]: {dados.comentario}"
         ultima_ocorrencia.problema = ultima_ocorrencia.problema + texto_solucao
 
-    # Reseta o sinalizador visual da máquina de volta ao status estável
     maquina.status = "Normal"
     
     db.commit()
@@ -188,4 +185,6 @@ app.mount("/", StaticFiles(directory=".", html=True), name="raiz")
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    # Configuração dinâmica para escutar na porta correta exigida pelo Render
+    porta = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=porta)

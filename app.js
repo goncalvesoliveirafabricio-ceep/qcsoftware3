@@ -1,4 +1,4 @@
-const API_URL = "https://qcsoftware2.onrender.com";
+const API_URL = ""; // Mantido vazio (rota relativa) para evitar problemas de CORS no Render
 
 const mapaConteiner = document.getElementById('mapa-conteiner');
 const banner = document.getElementById('banner-alerta');
@@ -18,12 +18,12 @@ let alertaJaTocou = false;
 
 async function atualizarPainelIndustrial() {
     try {
-        // Rota sincronizada com a API do PostgreSQL no Neon
-        const resposta = await fetch('/api/mapamaquinas');
-        const maquinas = await resposta.json();
+        // Rota dinâmica sincronizada localmente com a API do Render
+        const resposta = await fetch(`${API_URL}/api/mapamaquinas`);
+        let maquinas = await resposta.json();
 
-        // 🚀 ADICIONE ESTA LINHA AQUI:
-        maquinas = maquinas.slice(0, 30);
+        // Limitador otimizado para exibir apenas as 30 primeiras máquinas em tela
+        // maquinas = maquinas.slice(0, 30);
         
         mapaConteiner.innerHTML = '';
         let temMaquinaParada = false;
@@ -42,7 +42,7 @@ async function atualizarPainelIndustrial() {
             container.style.left = `${posX}px`;
             container.style.top = `${posY}px`;
             
-            // Renderização utilizando a classe de status dinâmica (Normal, Parado, Manutenção)
+            // Renderização utilizando a classe de status dinâmica corrigida ('Parado')
             container.innerHTML = `
                 <div class="maquina-icone ${maq.status || 'Normal'}">
                     <i class="fa-solid fa-industry"></i>
@@ -56,17 +56,17 @@ async function atualizarPainelIndustrial() {
 
             mapaConteiner.appendChild(container);
 
-            // O Alarme dispara apenas se houver alguma máquina efetivamente "Parada"
+            // Alarme dispara baseando-se no novo retorno estável do banco de dados
             if (maq.status === 'Parado') {
                 temMaquinaParada = true;
             }
         });
 
-        // Gerenciamento Inteligente do Banner de Emergência e do Áudio
+        // Gerenciamento do Banner de Emergência e do Áudio
         if (temMaquinaParada) {
             banner.style.display = 'block';
             if (!alertaJaTocou) {
-                audioAlerta.play().catch(() => console.log("Áudio aguardando clique inicial do usuário para liberação do navegador."));
+                audioAlerta.play().catch(() => console.log("Áudio aguardando interação inicial para liberação das políticas do navegador."));
                 alertaJaTocou = true;
             }
         } else {
@@ -86,15 +86,14 @@ async function abrirModal(id, nome) {
     modalIdMaquina.value = id;
     modalTitulo.innerText = `Histórico / Ocorrência - ${nome} (#${id})`;
 
-    // Silencia o áudio imediatamente ao abrir a janela para manter o foco na tratativa técnica
     audioAlerta.pause();
 
     try {
-        const resposta = await fetch(`/api/mapamaquinas/${id}/ocorrencia`);
+        const resposta = await fetch(`${API_URL}/api/mapamaquinas/${id}/ocorrencia`);
         const dados = await resposta.json();
 
         if (dados.tem_ocorrencia) {
-            // MODO VISUALIZAÇÃO: Exibe os dados da quebra atual e bloqueia edição preliminar
+            // MODO VISUALIZAÇÃO: Exibe a falha e trava os campos para leitura externa
             modalDataHora.value = dados.data_hora;
             modalColaborador.value = dados.colaborador;
             modalDescricao.value = dados.problema;
@@ -102,13 +101,12 @@ async function abrirModal(id, nome) {
             modalColaborador.disabled = true;
             modalDescricao.disabled = true;
 
-            // Botão direciona para a transição de manutenção e posterior fechamento
             btnAcao.innerText = "Iniciar / Finalizar Manutenção";
             btnAcao.className = "btn";
             btnAcao.style.backgroundColor = "#f1c40f"; 
             btnAcao.onclick = () => prepararResolucao(id, nome);
         } else {
-            // MODO CADASTRO: Libera os inputs para registrar um novo evento de parada
+            // MODO CADASTRO: Abre o formulário limpo para registrar nova parada técnica
             const agora = new Date();
             modalDataHora.value = agora.toLocaleString('pt-BR');
             modalColaborador.value = '';
@@ -134,8 +132,8 @@ async function abrirModal(id, nome) {
 // Transforma o modal atual no formulário de resolução e avisa o backend da manutenção
 async function prepararResolucao(id, nome) {
     try {
-        // Informa ao servidor que a equipe técnica assumiu o posto (Muda cor para Amarelo no mapa de fundo)
-        await fetch(`/api/mapamaquinas/${id}/manutencao`, { method: 'POST' });
+        // Envia comando para pintar o ativo de Amarelo (Manutenção) em tempo real
+        await fetch(`${API_URL}/api/mapamaquinas/${id}/manutencao`, { method: 'POST' });
         atualizarPainelIndustrial();
 
         modalTitulo.innerText = `Registrar Solução - ${nome} (#${id})`;
@@ -143,7 +141,6 @@ async function prepararResolucao(id, nome) {
         const agora = new Date();
         modalDataHora.value = agora.toLocaleString('pt-BR');
         
-        // Configura os campos para entrada do relatório de engenharia / manutenção
         modalColaborador.value = '';
         modalColaborador.disabled = false;
         modalColaborador.placeholder = "Nome do técnico / mecânico";
@@ -152,7 +149,6 @@ async function prepararResolucao(id, nome) {
         modalDescricao.disabled = false;
         modalDescricao.placeholder = "O que foi feito para solucionar o problema e liberar a linha?";
 
-        // Ajusta botão para encerramento completo (Retorna cor para Verde)
         btnAcao.innerText = "Salvar e Ativar Máquina";
         btnAcao.style.backgroundColor = "#2ecc71";
         btnAcao.onclick = () => enviarResolucao(id);
@@ -171,7 +167,7 @@ async function enviarResolucao(id) {
     }
 
     try {
-        const resposta = await fetch(`/api/mapamaquinas/${id}/resolver`, {
+        const resposta = await fetch(`${API_URL}/api/mapamaquinas/${id}/resolver`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -194,7 +190,6 @@ async function enviarResolucao(id) {
 
 function fecharModal() {
     modal.style.display = 'none';
-    // Ao fechar sem salvar, revalida o painel para restaurar estados ou alarmes pendentes
     atualizarPainelIndustrial();
 }
 
@@ -209,7 +204,7 @@ async function salvarOcorrencia() {
     }
 
     try {
-        const respuesta = await fetch(`/api/mapamaquinas/${id}/ocorrencia`, {
+        const respuesta = await fetch(`${API_URL}/api/mapamaquinas/${id}/ocorrencia`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -230,6 +225,6 @@ async function salvarOcorrencia() {
     }
 }
 
-// Configuração dos tempos de pooling em tempo real (2 segundos)
+// Configuração de polling assíncrono (2 segundos)
 setInterval(atualizarPainelIndustrial, 2000);
 atualizarPainelIndustrial();
