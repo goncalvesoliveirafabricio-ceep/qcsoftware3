@@ -9,18 +9,15 @@ from sqlalchemy.orm import sessionmaker, Session
 app = FastAPI(title="Q.C Software - API MapaMaquinas")
 
 # ---------------------------------------------------------------------------
-# CONFIGURAÇÃO DE CONEXÃO E INFRAESTRUTURA - SQLITE LOCAL (banco.db)
+# CONFIGURAÇÃO DE CONEXÃO E INFRAESTRUTURA NEON POSTGRESQL
 # ---------------------------------------------------------------------------
-# O arquivo 'banco.db' será criado automaticamente na raiz do seu projeto
-SQLALCHEMY_DATABASE_URL = "sqlite:///./banco.db"
+SQLALCHEMY_DATABASE_URL = "postgresql://neondb_owner:npg_RibO1T8uQqNS@ep-flat-night-ap3lna17-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
 
-# O argumento 'connect_args' é necessário especificamente para o SQLite
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
-)
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
 # ---------------------------------------------------------------------------
 # MODELOS DE TABELAS (SQLALCHEMY ORM)
 # ---------------------------------------------------------------------------
