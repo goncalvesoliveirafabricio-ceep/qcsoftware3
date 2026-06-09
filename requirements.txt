@@ -4,5 +4,4 @@ sqlalchemy==2.0.32
 pydantic>=2.9.0
 pandas>=3.0.0
 aiofiles==24.1.0
-
-//--pip install psycopg2-binary
+psycopg2-binary>=2.9.9
