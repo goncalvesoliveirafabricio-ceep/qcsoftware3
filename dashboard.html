@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q.C Software - Dashboard Gerencial</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* Estilos base e reset de margens */
+        body {
+            background-color: #0f172a;
+            color: #ffffff;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            box-sizing: border-box;
+        }
+
+        /* Estrutura Responsiva do Cabeçalho */
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            padding: 15px 30px;
+            box-sizing: border-box;
+            background-color: #1e293b;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+            border-bottom: 1px solid #334155;
+        }
+        .header-left {
+            width: 180px;
+            flex-shrink: 0;
+            text-align: left;
+        }
+        .header-left img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.5));
+        }
+        .header-center {
+            text-align: center;
+            flex-grow: 1;
+        }
+        .header-center h1 {
+            margin: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .header-center p {
+            margin: 4px 0 0 0;
+            color: #94a3b8;
+            font-size: 13px;
+            letter-spacing: 0.3px;
+        }
+        .header-right {
+            width: 180px;
+            flex-shrink: 0;
+            text-align: right;
+        }
+        .btn-navegacao {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background-color: #0284c7;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background-color 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .btn-navegacao:hover {
+            background-color: #0369a1;
+        }
+
+        /* Grid de Cards Responsivo */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 35px;
+        }
+        .card-kpi {
+            background-color: #1e293b;
+            border-radius: 8px;
+            padding: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.2);
+        }
+        .card-kpi p {
+            margin: 0;
+            color: #94a3b8;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        .card-kpi h3 {
+            margin: 6px 0 0 0;
+            font-size: 34px;
+            font-weight: 700;
+        }
+        .icon-box {
+            padding: 12px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Container do Gráfico */
+        .chart-wrapper {
+            background-color: #1e293b;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 480px;
+            margin: 0 auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+            border: 1px solid #334155;
+            box-sizing: border-box;
+        }
+
+        /* ------------------------------------------------------------------
+           REGRAS DE RESPONSIVIDADE (MEDIA QUERIES)
+           ------------------------------------------------------------------ */
+        
+        /* TABLETS (Telas médias até 900px) */
+        @media (max-width: 900px) {
+            .cards-grid {
+                grid-template-columns: repeat(2, 1fr); /* Divide em blocos de 2x2 */
+            }
+        }
+
+        /* SMARTPHONES (Telas pequenas até 650px) */
+        @media (max-width: 650px) {
+            .header-container {
+                flex-direction: column; /* Empilha os elementos do cabeçalho verticalmente */
+                gap: 15px;
+                padding: 20px;
+                text-align: center;
+            }
+            .header-left, .header-right {
+                width: 100%;
+                text-align: center;
+            }
+            .header-left img {
+                margin: 0 auto;
+                max-width: 140px;
+            }
+            .cards-grid {
+                grid-template-columns: 1fr; /* Um card por linha inteira */
+                gap: 15px;
+            }
+            .chart-wrapper {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header-container">
+        <div class="header-left">
+            <img src="logo.png" alt="Logo Q.C">
+        </div>
+        
+        <div class="header-center">
+            <h1>
+                <i class="fa-solid fa-industry" style="margin-right: 15px; color: #ffffff;"></i>Q.C Software
+            </h1>
+            <p>Painel de Controle em Tempo Real das Máquinas</p>
+        </div>
+        
+        <div class="header-right">
+            <a href="index.html" class="btn-navegacao">
+                <i class="fa-solid fa-map-location-dot"></i>
+                Ver Mapa
+            </a>
+        </div>
+    </header>
+
+    <main style="padding: 30px; box-sizing: border-box; max-width: 1300px; margin: 0 auto;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid #1e293b; padding-bottom: 10px;">
+            <h2 style="margin: 0; font-size: 16px; color: #cbd5e1; font-weight: 500; text-transform: uppercase; letter-spacing: 1px;">Indicadores de Chão de Fábrica</h2>
+            <span style="font-size: 11px; background-color: #0284c7; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; font-weight: bold; letter-spacing: 0.5px;">Neon DB Ativo</span>
+        </div>
+
+        <section class="cards-grid">
+            
+            <div class="card-kpi" style="border-left: 5px solid #38bdf8;">
+                <div>
+                    <p>Total Ativos</p>
+                    <h3 id="card-total" style="color: #f8fafc;">...</h3>
+                </div>
+                <div class="icon-box" style="background-color: rgba(56, 189, 248, 0.1);">
+                    <i class="fa-solid fa-microchip" style="color: #38bdf8; font-size: 24px;"></i>
+                </div>
+            </div>
+
+            <div class="card-kpi" style="border-left: 5px solid #22c55e;">
+                <div>
+                    <p>Operação Normal</p>
+                    <h3 id="card-normal" style="color: #22c55e;">...</h3>
+                </div>
+                <div class="icon-box" style="background-color: rgba(34, 197, 94, 0.1);">
+                    <i class="fa-solid fa-circle-check" style="color: #22c55e; font-size: 24px;"></i>
+                </div>
+            </div>
+
+            <div class="card-kpi" style="border-left: 5px solid #ef4444;">
+                <div>
+                    <p>Bloqueio / Parado</p>
+                    <h3 id="card-parada" style="color: #ef4444;">...</h3>
+                </div>
+                <div class="icon-box" style="background-color: rgba(239, 68, 68, 0.1);">
+                    <i class="fa-solid fa-circle-xmark" style="color: #ef4444; font-size: 24px;"></i>
+                </div>
+            </div>
+
+            <div class="card-kpi" style="border-left: 5px solid #eab308;">
+                <div>
+                    <p>Em Manutenção</p>
+                    <h3 id="card-manutencao" style="color: #eab308;">...</h3>
+                </div>
+                <div class="icon-box" style="background-color: rgba(234, 179, 8, 0.1);">
+                    <i class="fa-solid fa-wrench" style="color: #eab308; font-size: 24px;"></i>
+                </div>
+            </div>
+        </section>
+
+        <section class="chart-wrapper">
+            <h4 style="margin: 0 0 5px 0; text-align: center; font-size: 16px; color: #f1f5f9; font-weight: 600; letter-spacing: 0.5px;">Distribuição Operacional dos Ativos</h4>
+            <p style="margin: 0 0 25px 0; text-align: center; color: #94a3b8; font-size: 12px;">Gráfico proporcional baseado nas 60 máquinas monitoradas</p>
+            
+            <div style="position: relative; width: 100%; max-width: 280px; margin: 0 auto; min-height: 280px;">
+                <canvas id="graficoStatus"></canvas>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script>
+        let graficoStatusMaquina = null;
+        const DASHBOARD_API_URL = "/api/dashboard/status";
+
+        async function buscarEAtualizarDashboard() {
+            try {
+                const resposta = await fetch(DASHBOARD_API_URL);
+                if (!resposta.ok) throw new Error(`Código HTTP: ${resposta.status}`);
+                const dados = await resposta.json();
+
+                // 1. Atualiza números lidos do Neon
+                document.getElementById("card-total").innerText = dados.total;
+                document.getElementById("card-normal").innerText = dados.normal;
+                document.getElementById("card-parada").innerText = dados.parado;
+                document.getElementById("card-manutencao").innerText = dados.manutencao;
+
+                // 2. Reconstrói o Gráfico do Chart.js de forma limpa
+                const ctx = document.getElementById("graficoStatus").getContext("2d");
+                
+                if (graficoStatusMaquina) {
+                    graficoStatusMaquina.destroy();
+                }
+
+                graficoStatusMaquina = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Normal', 'Parado', 'Manutenção'],
+                        datasets: [{
+                            data: [dados.normal, dados.parado, dados.manutencao],
+                            backgroundColor: ['#22c55e', '#ef4444', '#eab308'],
+                            hoverOffset: 4,
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#cbd5e1',
+                                    padding: 15,
+                                    font: { size: 12, weight: '500' }
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error("Falha na sincronização automatizada com o banco Neon:", error);
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            buscarEAtualizarDashboard();
+            setInterval(buscarEAtualizarDashboard, 5000); // Polling secundário de segurança
+        });
+    </script>
+</body>
+</html>

@@ -1,12 +1,22 @@
 import os
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from sqlalchemy import create_engine, Column, Integer, String, Boolean, Text
+from sqlalchemy import create_engine, Column, Integer, String, Boolean, Text, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 
 app = FastAPI(title="Q.C Software - API MapaMaquinas")
+
+# Configuração do CORS para permitir que páginas HTML isoladas acessem a API sem bloqueios
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # ---------------------------------------------------------------------------
 # CONFIGURAÇÃO DE CONEXÃO E INFRAESTRUTURA NEON POSTGRESQL
@@ -88,7 +98,31 @@ class ResolucaoInput(BaseModel):
     comentario: str
 
 # ---------------------------------------------------------------------------
-# ROTAS DA API MapaMaquinas
+# NOVA ROTA: ADICIONADA PARA O DASHBOARD GERENCIAL
+# ---------------------------------------------------------------------------
+@app.get("/api/dashboard/status")
+def obter_status_dashboard(db: Session = Depends(get_db)):
+    """Retorna os dados agregados prontos para alimentar os cards e gráficos do dashboard"""
+    try:
+        # Executa agrupamento e soma via ORM direto no Neon PostgreSQL
+        resultado = db.query(
+            func.count(MapaMaquinas.id_maquinas).label("total"),
+            func.count(func.nullif(MapaMaquinas.status != "Normal", True)).label("normal"),
+            func.count(func.nullif(MapaMaquinas.status != "Parado", True)).label("parado"),
+            func.count(func.nullif(MapaMaquinas.status != "Manutenção", True)).label("manutencao")
+        ).filter(MapaMaquinas.ativo == True).first()
+
+        return {
+            "total": resultado.total or 0,
+            "normal": resultado.normal or 0,
+            "parado": resultado.parado or 0,
+            "manutencao": resultado.manutencao or 0
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao processar indicadores: {str(e)}")
+
+# ---------------------------------------------------------------------------
+# ROTAS DA API MapaMaquinas ORIGINAL
 # ---------------------------------------------------------------------------
 
 @app.get("/api/mapamaquinas")
@@ -139,7 +173,6 @@ def registrar_ocorrencia(id_maquina: int, dados: OcorrenciaInput, db: Session = 
     )
     db.add(nova_ocorrencia)
     
-    # Atualizado de 'Parada' para 'Parado' para casar perfeitamente com o CSS e o app.js
     maquina.status = "Parado"
     
     db.commit()
@@ -185,6 +218,5 @@ app.mount("/", StaticFiles(directory=".", html=True), name="raiz")
 
 if __name__ == "__main__":
     import uvicorn
-    # Configuração dinâmica para escutar na porta correta exigida pelo Render
     porta = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=porta)
+    uvicorn.run("main:app", host="0.0.0.0", port=porta, reload=True)

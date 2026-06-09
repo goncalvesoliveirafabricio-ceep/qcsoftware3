@@ -16,14 +16,18 @@ const btnAcao = document.getElementById('btn-acao');
 // Variável de controle para o som tocar apenas uma vez por bloco de falhas
 let alertaJaTocou = false;
 
+// Função auxiliar para notificar o dashboard de forma segura caso ele exista na mesma sessão/janela
+function notificarDashboardSeExistir() {
+    if (typeof buscarEAtualizarDashboard === "function") {
+        buscarEAtualizarDashboard();
+    }
+}
+
 async function atualizarPainelIndustrial() {
     try {
         // Rota dinâmica sincronizada localmente com a API do Render
         const resposta = await fetch(`${API_URL}/api/mapamaquinas`);
         let maquinas = await resposta.json();
-
-        // Limitador otimizado para exibir apenas as 30 primeiras máquinas em tela
-        // maquinas = maquinas.slice(0, 30);
         
         mapaConteiner.innerHTML = '';
         let temMaquinaParada = false;
@@ -42,7 +46,7 @@ async function atualizarPainelIndustrial() {
             container.style.left = `${posX}px`;
             container.style.top = `${posY}px`;
             
-            // Renderização utilizando a classe de status dinâmica corrigida ('Parado')
+            // Renderização utilizando a classe de status dinâmica corrigida vinda do Neon
             container.innerHTML = `
                 <div class="maquina-icone ${maq.status || 'Normal'}">
                     <i class="fa-solid fa-industry"></i>
@@ -56,7 +60,7 @@ async function atualizarPainelIndustrial() {
 
             mapaConteiner.appendChild(container);
 
-            // Alarme dispara baseando-se no novo retorno estável do banco de dados
+            // Alarme dispara baseando-se no novo retorno estável do banco de dados ('Parado')
             if (maq.status === 'Parado') {
                 temMaquinaParada = true;
             }
@@ -75,6 +79,9 @@ async function atualizarPainelIndustrial() {
             audioAlerta.currentTime = 0;
             alertaJaTocou = false; 
         }
+
+        // Mantém os indicadores gerais sincronizados
+        notificarDashboardSeExistir();
 
     } catch (erro) {
         console.error("Erro ao obter dados das máquinas do Neon:", erro);
