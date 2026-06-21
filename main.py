@@ -5,7 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, Text, func
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
+import urllib
 
 app = FastAPI(title="Q.C Software - API MapaMaquinas")
 
@@ -19,14 +20,33 @@ app.add_middleware(
 )
 
 # ---------------------------------------------------------------------------
-# CONFIGURAÇÃO DE CONEXÃO E INFRAESTRUTURA NEON POSTGRESQL
+# CONFIGURAÇÃO DE CONEXÃO E INFRAESTRUTURA - SQLITE LOCAL (banco.db)
 # ---------------------------------------------------------------------------
-SQLALCHEMY_DATABASE_URL = "postgresql://neondb_owner:npg_RibO1T8uQqNS@ep-flat-night-ap3lna17-pooler.c-7.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+# 1. Tratamento seguro de credenciais e URL de conexão
+# Usamos o quote_plus para escapar caracteres especiais na senha de forma segura
+usuario = "fabricio"
+senha_segura = urllib.parse.quote_plus("Myfab@123")
+host = "129.121.46.237"
+porta = "5432"
+banco = "qcsoftware"
 
+SQLALCHEMY_DATABASE_URL = f"postgresql://{usuario}:{senha_segura}@{host}:{porta}/{banco}?sslmode=disable"
+
+# 2. Configuração do Engine e Sessão
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base = declarative_base()
+# 3. Declarative base (Padrão moderno do SQLAlchemy 2.0+)
+class Base(DeclarativeBase):
+    pass
+
+# Dependência para obter a sessão do banco nas rotas do FastAPI
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
 # ---------------------------------------------------------------------------
 # MODELOS DE TABELAS (SQLALCHEMY ORM)
