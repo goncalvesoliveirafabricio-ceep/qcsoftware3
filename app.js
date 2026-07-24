@@ -232,6 +232,6 @@ async function salvarOcorrencia() {
     }
 }
 
-// Configuração de polling assíncrono (2 segundos)
-setInterval(atualizarPainelIndustrial, 2000);
+// Configuração de polling assíncrono (60 segundos)
+setInterval(atualizarPainelIndustrial, 60000);
 atualizarPainelIndustrial();
